@@ -5,3 +5,6 @@ dev:
 
 start:
 	deno run --allow-net --config tsconfig.json src/app.ts
+
+format:
+	deno fmt

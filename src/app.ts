@@ -1,9 +1,9 @@
-import { ProbeFactory } from "./probe/index.ts";
+import { Probe } from "./probe/probe.ts";
 
 import { AppModule } from "./app.module.ts";
 
 const createApplication = () => {
-  const app = ProbeFactory.createApplication(AppModule);
+  const app = Probe.createApplication(AppModule);
 
   app?.setGlobalPrefix("/api");
   app?.listen({ port: 8080 });

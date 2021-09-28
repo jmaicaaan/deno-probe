@@ -1,33 +1,36 @@
-import { Http } from "../probe/index.ts";
+import { Probe } from "../probe/probe.ts";
 
-@Http.Controller("/articles")
+@Probe.Http.Controller("/articles")
 export class ArticlesController {
-  @Http.Get("/:id")
-  public getArticle(@Http.Param('id') id: number, @Http.Query('text') text: string) {
+  @Probe.Http.Get("/:id")
+  public getArticle(
+    @Probe.Http.Param("id") id: number,
+    @Probe.Http.Query("text") text: string,
+  ) {
     return JSON.stringify(["Get article", id, text]);
   }
 
-  @Http.Get()
+  @Probe.Http.Get()
   public getMoreArticles() {
     return JSON.stringify(["Get articles"]);
   }
 
-  @Http.Post()
+  @Probe.Http.Post()
   public createArticle(article: any) {
     return article;
   }
 
-  @Http.Delete("/:id")
+  @Probe.Http.Delete("/:id")
   public deleteArticle(id: number, article: any) {
     return JSON.stringify({});
   }
 
-  @Http.Patch("/:id")
+  @Probe.Http.Patch("/:id")
   public patchArticle(id: number, article: any) {
     return article;
   }
 
-  @Http.Put("/:id")
+  @Probe.Http.Put("/:id")
   public updateArticle(id: number, article: any) {
     return article;
   }

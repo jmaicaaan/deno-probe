@@ -108,31 +108,34 @@ const createRouteMatchingAndRespond = (
     const requestUrl = new URL(requestEvent.request.url);
     const requestMethod = requestEvent.request.method;
 
-    const matchedRouteHandler = controllers?.reduce((accumulator, controller) => {
-      controller.handlers.find((handler) => {
-        const path = handlePathTrailingSlash(
-          config.globalPrefix + handler.fullPath,
-          config.disableTrailingSlash,
-        );
+    const matchedRouteHandler = controllers?.reduce(
+      (accumulator, controller) => {
+        controller.handlers.find((handler) => {
+          const path = handlePathTrailingSlash(
+            config.globalPrefix + handler.fullPath,
+            config.disableTrailingSlash,
+          );
 
-        const hasMatchResult = pathToRegexp(path).exec(requestUrl.pathname);
+          const hasMatchResult = pathToRegexp(path).exec(requestUrl.pathname);
 
-        if (!hasMatchResult) {
-          return;
-        }
+          if (!hasMatchResult) {
+            return;
+          }
 
-        if (handler.method !== requestMethod) {
-          return;
-        }
+          if (handler.method !== requestMethod) {
+            return;
+          }
 
-        accumulator = {
-          ...handler,
-          pathWithGlobalPrefix: path,
-        };
-      });
+          accumulator = {
+            ...handler,
+            pathWithGlobalPrefix: path,
+          };
+        });
 
-      return accumulator;
-    }, {} as MatchRouteHandler);    
+        return accumulator;
+      },
+      {} as MatchRouteHandler,
+    );
 
     if (!matchedRouteHandler || !matchedRouteHandler.target) {
       return requestEvent.respondWith(
@@ -155,15 +158,15 @@ const enhanceHandler = ({
   matchedRouteHandler,
   request,
 }: {
-  matchedRouteHandler: MatchRouteHandler,
-  request: Deno.RequestEvent['request'],
+  matchedRouteHandler: MatchRouteHandler;
+  request: Deno.RequestEvent["request"];
 }): MatchRouteHandler => {
   const attachDecoratedParamsToHandler = () => {
     const handlerParams = matchedRouteHandler.params
-    /**
+      /**
      * Map and resolve the value from the resolver
      */
-      .map(param => {
+      .map((param) => {
         const resolverArgs = {
           ...matchedRouteHandler,
           key: param.key,
@@ -182,9 +185,9 @@ const enhanceHandler = ({
       /**
        * Unpack/unwrap the param from the object
        */
-      .map(param => param.value);
+      .map((param) => param.value);
 
-      const enhancedTarget = () => matchedRouteHandler.target(...handlerParams);
+    const enhancedTarget = () => matchedRouteHandler.target(...handlerParams);
 
     return {
       ...matchedRouteHandler,

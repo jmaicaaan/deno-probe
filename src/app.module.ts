@@ -1,11 +1,10 @@
-import { Module } from "./probe/decorators/Module.ts";
-import { HttpDecorators } from "./probe/constants/http.constants.ts";
+import { Probe } from "./probe/probe.ts";
 
 import { ArticlesController } from "./controllers/articles-controller.ts";
 import { UsersController } from "./controllers/users-controller.ts";
 
-@Module({
-  type: HttpDecorators.AppModule,
+@Probe.Module({
+  type: "http",
   controllers: [ArticlesController, UsersController],
 })
 export class AppModule {}

@@ -1,8 +1,8 @@
-import { Http } from "../probe/index.ts";
+import { Probe } from "../probe/probe.ts";
 
-@Http.Controller("/users")
+@Probe.Http.Controller("/users")
 export class UsersController {
-  @Http.Get()
+  @Probe.Http.Get()
   public getUsers() {
     return JSON.stringify(["hello"]);
   }

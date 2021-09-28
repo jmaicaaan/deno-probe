@@ -3,6 +3,8 @@ export type HttpParamResolverArgs = {
   path: string;
   pathWithGlobalPrefix: string;
   method: string;
-  request: Deno.RequestEvent['request'];
+  request: Deno.RequestEvent["request"];
 };
-export type HttpParamResolverFunction = (args: HttpParamResolverArgs) => unknown;
+export type HttpParamResolverFunction = (
+  args: HttpParamResolverArgs,
+) => unknown;

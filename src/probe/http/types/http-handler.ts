@@ -1,4 +1,4 @@
-import { HttpParamResolverFunction } from './http-param-resolver.ts';
+import { HttpParamResolverFunction } from "./http-param-resolver.ts";
 
 export type HttpHandlerParam = {
   key: string;

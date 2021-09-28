@@ -1,4 +1,4 @@
-import { HttpParamResolverFunction } from '../types/http-param-resolver.ts';
+import { HttpParamResolverFunction } from "../types/http-param-resolver.ts";
 
 export const QueryParamResolver: HttpParamResolverFunction = ({
   key,
@@ -13,6 +13,6 @@ export const QueryParamResolver: HttpParamResolverFunction = ({
         return accumulator;
       }, {} as Record<string, string>);
   }
-  
+
   return url.searchParams.get(key);
 };

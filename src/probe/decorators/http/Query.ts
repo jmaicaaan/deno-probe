@@ -2,12 +2,12 @@ import { Reflect } from "https://deno.land/x/reflect_metadata@v0.1.12/mod.ts";
 
 import { HttpDecorators } from "../../constants/http.constants.ts";
 
-import { ParamResolver } from '../../http/resolvers/param-resolver.ts';
+import { QueryParamResolver } from '../../http/resolvers/query-param-resolver.ts';
 
-export const Param = (key?: string): ParameterDecorator => {
+export const Query = (key?: string): ParameterDecorator => {
   return (target, propertyKey, paramaterIndex) => {
     const existingMetadata = Reflect.getMetadata(
-      HttpDecorators.Param,
+      HttpDecorators.Query,
       target,
       propertyKey
     );
@@ -20,11 +20,11 @@ export const Param = (key?: string): ParameterDecorator => {
     metaValue.push({
       key,
       paramaterIndex,
-      resolver: ParamResolver,
+      resolver: QueryParamResolver
     });
 
     Reflect.defineMetadata(
-      HttpDecorators.Param,
+      HttpDecorators.Query,
       metaValue,
       target,
       propertyKey

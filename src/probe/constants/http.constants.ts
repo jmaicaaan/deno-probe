@@ -13,4 +13,5 @@ export const HttpDecorators = {
   Path: "httpPath",
   Method: "httpMethod",
   Param: "httpParam",
+  Query: "httpQueryParam",
 } as const;

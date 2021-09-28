@@ -4,11 +4,16 @@ import { pathToRegexp } from "https://deno.land/x/path_to_regexp@v6.2.0/index.ts
 import { HttpDecorators } from "../constants/http.constants.ts";
 import { AppModule } from "../types/app.module.ts";
 import { HttpApplicationConfig } from "./types/httpApplication.ts";
+import { HttpHandler } from "./types/http-handler.ts";
+
+type MatchRouteHandler = HttpHandler & {
+  pathWithGlobalPrefix: string;
+};
 
 export const createRouter = (appModule: AppModule) =>
   (config: HttpApplicationConfig) => {
     const controllers = buildControllers(appModule.controllers);
-    return createRouteMatching(controllers, config);
+    return createRouteMatchingAndRespond(controllers, config);
   };
 
 const buildControllers = (controllers: AppModule["controllers"]) => {
@@ -55,6 +60,16 @@ const buildControllers = (controllers: AppModule["controllers"]) => {
             classInstance,
             handlerName,
           );
+          const handlerParams = Reflect.getMetadata(
+            HttpDecorators.Param,
+            classInstance,
+            handlerName,
+          ) || [];
+          const handlerQueries = Reflect.getMetadata(
+            HttpDecorators.Query,
+            classInstance,
+            handlerName,
+          ) || [];
 
           return {
             fullPath: handlePathTrailingSlash(controllerMetadata.path, true) +
@@ -62,6 +77,10 @@ const buildControllers = (controllers: AppModule["controllers"]) => {
             path: handlerPath,
             method: handlerMethod,
             target: handler,
+            params: [
+              ...handlerParams,
+              ...handlerQueries,
+            ],
           };
         })
         .filter((handler) => handler.method);
@@ -81,7 +100,7 @@ const buildControllers = (controllers: AppModule["controllers"]) => {
   return controllerListWithHandlers;
 };
 
-const createRouteMatching = (
+const createRouteMatchingAndRespond = (
   controllers: ReturnType<typeof buildControllers>,
   config: HttpApplicationConfig,
 ) =>
@@ -89,13 +108,8 @@ const createRouteMatching = (
     const requestUrl = new URL(requestEvent.request.url);
     const requestMethod = requestEvent.request.method;
 
-    // TODO
-    const matchRoute: Record<string, any> = {
-      handler: undefined,
-    };
-
-    controllers?.find((controller) => {
-      return controller.handlers.find((handler) => {
+    const matchedRouteHandler = controllers?.reduce((accumulator, controller) => {
+      controller.handlers.find((handler) => {
         const path = handlePathTrailingSlash(
           config.globalPrefix + handler.fullPath,
           config.disableTrailingSlash,
@@ -111,11 +125,16 @@ const createRouteMatching = (
           return;
         }
 
-        matchRoute.handler = handler.target;
+        accumulator = {
+          ...handler,
+          pathWithGlobalPrefix: path,
+        };
       });
-    });
 
-    if (!matchRoute.handler) {
+      return accumulator;
+    }, {} as MatchRouteHandler);    
+
+    if (!matchedRouteHandler || !matchedRouteHandler.target) {
       return requestEvent.respondWith(
         new Response("Not found route", {
           status: 404,
@@ -124,9 +143,57 @@ const createRouteMatching = (
     }
 
     // Handlers that return promises
-    const handlerResult = await matchRoute.handler(requestEvent.request);
+    const enhancedHandler = enhanceHandler({
+      matchedRouteHandler,
+      request: requestEvent.request,
+    });
+    const handlerResult = await enhancedHandler.target();
     return requestEvent.respondWith(new Response(handlerResult));
   };
+
+const enhanceHandler = ({
+  matchedRouteHandler,
+  request,
+}: {
+  matchedRouteHandler: MatchRouteHandler,
+  request: Deno.RequestEvent['request'],
+}): MatchRouteHandler => {
+  const attachDecoratedParamsToHandler = () => {
+    const handlerParams = matchedRouteHandler.params
+    /**
+     * Map and resolve the value from the resolver
+     */
+      .map(param => {
+        const resolverArgs = {
+          ...matchedRouteHandler,
+          key: param.key,
+          request,
+        };
+
+        return {
+          value: param.resolver(resolverArgs),
+          parameterIndex: param.parameterIndex,
+        };
+      })
+      /**
+       * Make sure the parameters are in order
+       */
+      .sort((a, b) => a.parameterIndex - b.parameterIndex)
+      /**
+       * Unpack/unwrap the param from the object
+       */
+      .map(param => param.value);
+
+      const enhancedTarget = () => matchedRouteHandler.target(...handlerParams);
+
+    return {
+      ...matchedRouteHandler,
+      target: enhancedTarget,
+    };
+  };
+
+  return attachDecoratedParamsToHandler();
+};
 
 const handlePathTrailingSlash = (
   path: string,
@@ -140,7 +207,7 @@ const handlePathTrailingSlash = (
   if (hasTrailingSlash) {
     return path.slice(
       0,
-      path.length - 1,
+      path.length,
     );
   }
 

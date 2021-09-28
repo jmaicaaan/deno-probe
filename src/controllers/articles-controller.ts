@@ -3,9 +3,8 @@ import { Http } from "../probe/index.ts";
 @Http.Controller("/articles")
 export class ArticlesController {
   @Http.Get("/:id")
-  public getArticle(@Http.Param() id: number) {
-    // console.log('id', id);
-    return JSON.stringify(["Get article"]);
+  public getArticle(@Http.Param('id') id: number, @Http.Query('text') text: string) {
+    return JSON.stringify(["Get article", id, text]);
   }
 
   @Http.Get()

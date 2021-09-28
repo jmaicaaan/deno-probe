@@ -5,6 +5,7 @@ import { Delete } from "./Delete.ts";
 import { Patch } from "./Patch.ts";
 
 import { Param } from "./Param.ts";
+import { Query } from "./Query.ts";
 
 import { Controller } from "./HttpController.ts";
 
@@ -18,4 +19,5 @@ export const Http = {
   Patch,
 
   Param,
+  Query,
 };
